@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Caxe",
+    "slug": "caxe",
+    "scheme": "caxe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": { "bundleIdentifier": "app.caxe.mobile", "supportsTablet": true },
+    "android": { "package": "app.caxe.mobile" },
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      "./plugins/with-notification-listener.cjs"
+    ]
+  }
+}

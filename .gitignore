@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+.wrangler/
+/ios/
+/android/
+**/build/
+.env
+.dev.vars
+*.db
+*.db-shm
+*.db-wal
