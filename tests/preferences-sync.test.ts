@@ -249,14 +249,29 @@ test("paginação recebe carteiras antes de transações e continua offline apó
   assert.equal(page, 2);
   assert.equal(analytics.getFinancialSummary(filter).expenses, 1000);
 });
-test("captura sugere valor mas exige revisão; mensagens ambíguas não inventam números", () => {
+test("captura automática aceita compras, salário e recarga de benefício", () => {
   assert.equal(
     parseNotification("Compra aprovada R$ 82,90 em Mercado")?.amountCents,
     8290,
   );
+  assert.equal(
+    parseNotification("Apple Pay: compra de R$ 12,34 em Café")?.kind,
+    "expense",
+  );
+  assert.equal(
+    parseNotification("Salário creditado: R$ 5.000,00")?.kind,
+    "income",
+  );
+  assert.equal(
+    parseNotification("Caju: crédito de benefício R$ 800,00")?.kind,
+    "topup",
+  );
   assert.equal(parseNotification("Compra R$ 82,90 · saldo R$ 900,00"), null);
   assert.equal(parseNotification("Texto sem valor"), null);
-  assert.equal(parseNotification("Seu limite: R$ 100,00")?.kind, null);
+  assert.equal(parseNotification("Seu saldo é R$ 100,00"), null);
+  assert.equal(parseNotification("Fatura fechada em R$ 100,00"), null);
+  assert.equal(parseNotification("Pix recebido de R$ 100,00"), null);
+  assert.equal(parseNotification("Estorno de R$ 100,00"), null);
   assert.equal(parseNotification("Compra R$ 82,90")?.needsReview, true);
 });
 test("evento idêntico recebido com outro ID mantém um único original consultável", () => {

@@ -1034,8 +1034,8 @@ export function Capture({ navigate }: { navigate: Navigate }) {
         </Label>
         <Label muted>
           {Platform.OS === "android"
-            ? "Somente os aplicativos escolhidos abaixo são lidos. A captura fica no aparelho."
-            : "O iOS não permite ler notificações de outros aplicativos. Use um Atalho com texto recebido por você e a ação “Abrir URLs”, ou cole o texto abaixo."}
+            ? "Compras de cartão, salário e crédito de vale com um único valor entram na revisão. Saldo, limite, fatura, Pix e transferências são ignorados."
+            : "No iOS, use uma automação de Notificação no Atalhos com o texto recebido e a ação “Abrir URLs”. Compras de cartão/Apple Pay, salário e crédito de vale entram na revisão."}
         </Label>
         {Platform.OS === "android" && (
           <>

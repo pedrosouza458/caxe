@@ -1,6 +1,7 @@
 import { requireOptionalNativeModule } from "expo-modules-core";
 import { z } from "zod";
 import type { Database } from "./database";
+import { parseNotification } from "../domain/capture";
 export const notificationModule = requireOptionalNativeModule<{
   openSettings: () => void;
   isEnabled: () => boolean;
@@ -20,8 +21,9 @@ export function drainNotifications(db: Database) {
   const messages = z
     .array(captureSchema)
     .parse(JSON.parse(notificationModule.peek()));
+  const purchases = messages.filter((m) => parseNotification(m.text));
   db.withTransactionSync(() => {
-    for (const m of messages)
+    for (const m of purchases)
       db.runSync(
         "INSERT OR IGNORE INTO capture_inbox VALUES (?,?,?,?)",
         m.id,

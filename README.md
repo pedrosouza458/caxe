@@ -54,15 +54,15 @@ As alterações visuais são síncronas no SQLite. A sincronização é posterio
 
 `src/domain/analytics.ts` centraliza o ledger usado por dashboard, gráficos, KPIs e histórico. Os componentes não implementam regras de soma.
 
-| Operação confirmada e não conciliada | Despesas de consumo | Receitas | Variação de saldo acompanhado |
-| --- | ---: | ---: | ---: |
-| Compra/despesa | +valor | — | −valor |
-| Receita | — | +valor | +valor |
-| Estorno vinculado | −valor, na data do crédito e categoria da compra | — | +valor |
-| Transferência própria de entrada/saída | — | — | ±valor |
-| Pagamento de fatura | — | — | −valor da conta pagadora |
-| Recarga de benefício | — | — | +valor da carteira de benefício |
-| Pendente, excluída ou conciliada como duplicata | — | — | — |
+| Operação confirmada e não conciliada            |                              Despesas de consumo | Receitas |   Variação de saldo acompanhado |
+| ----------------------------------------------- | -----------------------------------------------: | -------: | ------------------------------: |
+| Compra/despesa                                  |                                           +valor |        — |                          −valor |
+| Receita                                         |                                                — |   +valor |                          +valor |
+| Estorno vinculado                               | −valor, na data do crédito e categoria da compra |        — |                          +valor |
+| Transferência própria de entrada/saída          |                                                — |        — |                          ±valor |
+| Pagamento de fatura                             |                                                — |        — |        −valor da conta pagadora |
+| Recarga de benefício                            |                                                — |        — | +valor da carteira de benefício |
+| Pendente, excluída ou conciliada como duplicata |                                                — |        — |                               — |
 
 - Dinheiro é armazenado em centavos inteiros; formatação pt-BR na interface. O ticket médio usa despesa líquida dividida pela quantidade de compras; sem compras, não há ticket.
 - Identidades de eventos são únicas. Antes de salvar uma nova movimentação com o mesmo valor, tipo, carteira e dia de um registro existente, a interface exige escolher entre conciliar com o original e confirmar que se trata de outra operação. Notificações de fontes distintas não são mescladas silenciosamente por coincidência de valor ou descrição.
@@ -78,9 +78,9 @@ As consultas agregam no SQLite, com índices por data, carteira, categoria, orig
 
 ## Captura Android e iPhone
 
-**Android:** em Ajustes → Automações e capturas, busque os aplicativos instalados pelo nome, selecione as fontes autorizadas e abra as configurações de acesso do sistema. O listener ignora fontes não autorizadas e resumos de grupos. As capturas ficam numa fila nativa persistente até serem copiadas para o inbox SQLite; o reconhecimento só ocorre depois da gravação local. Revise cada captura, selecione carteira, tipo, categoria e valor e confirme. Textos com múltiplos valores não geram uma sugestão de valor.
+**Android:** em Ajustes → Automações e capturas, busque os aplicativos instalados pelo nome, selecione as fontes autorizadas e abra as configurações de acesso do sistema. O listener ignora fontes não autorizadas e resumos de grupos. Compras de cartão, Apple Pay/Google Pay, salário e crédito de vale com exatamente um valor entram na fila; saldo, limite, fatura, Pix, transferências, depósitos, saques, estornos e textos com mais de um valor são descartados. Salário é receita da conta; crédito de vale é recarga da carteira de benefício. Revise cada captura antes de confirmar.
 
-**iPhone:** o iOS não disponibiliza a leitura de notificações de aplicativos bancários por outros apps. Não há promessa de interceptação automática. O Caxe aceita texto colado e o deep link `caxe://capture?text=...` para um Atalho com texto explicitamente fornecido pelo usuário. No Atalhos, codifique o texto para URL e use a ação “Abrir URLs”; o Caxe abre a revisão, sem salvar movimentações automaticamente. A disponibilidade de gatilhos do Atalhos depende do tipo de entrada permitido pelo iOS.
+**iPhone:** o Caxe não tem acesso nativo à central de notificações. No iOS 27, crie no Atalhos uma automação de **Notificação** para cada banco ou Wallet: passe o conteúdo recebido por **Codificar URL** e abra `caxe://capture?source=apple-pay&text=...` (troque a fonte para `bank` nas automações bancárias). O Caxe aplica o mesmo filtro conservador para compra, salário e vale e abre a revisão, sem salvar automaticamente. Em versões anteriores do iOS, use texto colado. A disponibilidade e a execução automática da automação dependem do iPhone e dos ajustes oferecidos pelo sistema.
 
 ## Verificações
 

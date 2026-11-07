@@ -13,6 +13,7 @@ import {
 } from "../domain/model";
 import type { Wallet, Transaction } from "../domain/model";
 import { parseNotification } from "../domain/capture";
+import { bankPresets, benefitPresets } from "../domain/institutions";
 
 export const kindLabels: Record<Transaction["kind"], string> = {
   expense: "Compra / despesa",
@@ -50,16 +51,17 @@ export function WalletForm({ onDone }: { onDone: () => void }) {
         onChangeText={setInstitution}
       />
       <View style={s.wrap}>
-        {["Nubank", "PicPay", "Itaú", "Pluxee", "Raiô", "Caju", "Flash"].map(
-          (x) => (
-            <Action
-              secondary
-              key={x}
-              title={x}
-              onPress={() => setInstitution(x)}
-            />
-          ),
-        )}
+        {(["food", "meal", "benefit"].includes(kind)
+          ? benefitPresets
+          : bankPresets
+        ).map((x) => (
+          <Action
+            secondary
+            key={x}
+            title={x}
+            onPress={() => setInstitution(x)}
+          />
+        ))}
       </View>
       <Field
         label="Nome da carteira"
@@ -151,9 +153,17 @@ export function TransactionForm({
   const [kind, setKind] = useState<Transaction["kind"]>(
     edit?.kind ?? parsed?.kind ?? "expense",
   );
-  const [walletId, setWalletId] = useState(
-    edit?.walletId ?? wallets[0]?.id ?? "",
-  );
+  const [walletId, setWalletId] = useState(() => {
+    if (edit) return edit.walletId;
+    if (parsed?.kind === "topup")
+      return (
+        wallets.find((w) => ["food", "meal", "benefit"].includes(w.kind))?.id ??
+        ""
+      );
+    if (parsed?.kind === "income")
+      return wallets.find((w) => w.kind === "account")?.id ?? "";
+    return wallets[0]?.id ?? "";
+  });
   const [categoryId, setCategoryId] = useState<string | null>(
     edit?.categoryId ?? null,
   );
@@ -166,6 +176,16 @@ export function TransactionForm({
   const [error, setError] = useState("");
   const [duplicateChoice, setDuplicateChoice] = useState<string | null>(null);
   useEffect(() => setDuplicateChoice(null), [walletId, kind, value, date]);
+  const selectableWallets = wallets
+    .filter(
+      (w) => kind !== "topup" || ["food", "meal", "benefit"].includes(w.kind),
+    )
+    .filter((w) => kind !== "income" || w.kind === "account");
+  useEffect(() => {
+    if (selectableWallets.some((w) => w.id === walletId)) return;
+    setWalletId(selectableWallets[0]?.id ?? "");
+    setRefundOf(null);
+  }, [kind, walletId, selectableWallets]);
   const duplicates = useMemo(() => {
     if (edit) return [];
     try {
@@ -197,7 +217,14 @@ export function TransactionForm({
             ? "Revisar captura"
             : "Nova movimentação"}
       </Label>
-      {capture && <Label muted>{capture.text}</Label>}
+      {capture && (
+        <>
+          <Label muted>{capture.text}</Label>
+          <Label muted size={12}>
+            Fonte: {capture.source}
+          </Label>
+        </>
+      )}
       <Field label="Descrição" value={title} onChangeText={setTitle} />
       <Field
         label="Valor em reais · sem pontos"
@@ -208,7 +235,7 @@ export function TransactionForm({
       <Field label="Data · AAAA-MM-DD" value={date} onChangeText={setDate} />
       <Label bold>Carteira</Label>
       <View style={s.wrap}>
-        {wallets.map((w) => (
+        {selectableWallets.map((w) => (
           <Action
             secondary
             selected={walletId === w.id}

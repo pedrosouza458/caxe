@@ -73,6 +73,19 @@ test("PostgreSQL: isolamento por usuário, CAS, deduplicação e integridade dos
       await applyOperation(
         sql,
         "alice",
+        op(
+          "transaction",
+          "wrong-topup",
+          tx({ id: "wrong-topup", kind: "topup" }),
+        ),
+      ),
+      false,
+      "benefit credits cannot enter a bank account",
+    );
+    assert.equal(
+      await applyOperation(
+        sql,
+        "alice",
         op("transaction", purchase.id, { ...purchase, amountCents: 6000 }, 0),
       ),
       false,

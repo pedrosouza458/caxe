@@ -12,6 +12,9 @@ import java.util.Locale
 import java.util.TimeZone
 
 class CaxeNotificationListener : NotificationListenerService() {
+  private val ignoredNotification = Regex("\\b(saldo|limite|fatura|vencimento|fechamento|pix|transfer[êe]ncia|dep[óo]sito|rendimento|saque|boleto|estorno)\\b", RegexOption.IGNORE_CASE)
+  private val trackedNotification = Regex("\\b(compra|apple\\s*pay|google\\s*pay|pagamento\\s+(aprovado|realizado|confirmado)|sal[aá]rio|folha de pagamento|pagamento salarial|benef[ií]cio|vale\\s+(alimenta[çc][aã]o|refei[çc][aã]o)|recarga|carga|cr[eé]dito)\\b", RegexOption.IGNORE_CASE)
+
   override fun onNotificationPosted(sbn: StatusBarNotification) {
     val prefs = CaptureQueue.prefs(this)
     if (!(prefs.getStringSet("packages", emptySet()) ?: emptySet()).contains(sbn.packageName)) return
@@ -20,7 +23,7 @@ class CaxeNotificationListener : NotificationListenerService() {
     val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
     val body = (extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString() ?: ""
     val text = "$title\n$body".trim().take(8000)
-    if (!text.contains("R$")) return
+    if (!text.contains("R$") || ignoredNotification.containsMatchIn(text) || !trackedNotification.containsMatchIn(text)) return
     val key = "${sbn.packageName}|${sbn.key}|${sbn.postTime}"
     val id = MessageDigest.getInstance("SHA-256").digest(key.toByteArray()).joinToString("") { "%02x".format(it) }
     synchronized(CaptureQueue.lock) {

@@ -23,6 +23,8 @@ export async function applyOperation(
   ), valid AS (
     SELECT p FROM candidate WHERE ${op.entity}<>'transaction' OR (
       EXISTS(SELECT 1 FROM sync_records w WHERE w.user_id=${userId} AND w.entity='wallet' AND w.entity_id=p->>'walletId')
+      AND (p->>'kind'<>'income' OR EXISTS(SELECT 1 FROM sync_records w WHERE w.user_id=${userId} AND w.entity='wallet' AND w.entity_id=p->>'walletId' AND w.payload->>'kind'='account'))
+      AND (p->>'kind'<>'topup' OR EXISTS(SELECT 1 FROM sync_records w WHERE w.user_id=${userId} AND w.entity='wallet' AND w.entity_id=p->>'walletId' AND w.payload->>'kind' IN ('food','meal','benefit')))
       AND (p->>'duplicateOf' IS NULL OR EXISTS(
         SELECT 1 FROM sync_records original WHERE original.user_id=${userId} AND original.entity='transaction'
         AND original.entity_id=p->>'duplicateOf' AND original.payload->>'duplicateOf' IS NULL

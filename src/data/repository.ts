@@ -74,6 +74,20 @@ export class Repository {
   }
   saveTransaction(value: Transaction) {
     const v = transactionSchema.parse(value);
+    const wallet = this.db.getFirstSync<Wallet>(
+      "SELECT * FROM wallets WHERE id=?",
+      v.walletId,
+    );
+    if (!wallet) throw new Error("Selecione uma carteira existente.");
+    if (
+      v.kind === "topup" &&
+      !["food", "meal", "benefit"].includes(wallet.kind)
+    )
+      throw new Error("A recarga precisa entrar em uma carteira de benefício.");
+    if (v.kind === "income" && wallet.kind !== "account")
+      throw new Error(
+        "Salário e receitas precisam entrar em uma conta bancária.",
+      );
     const source =
       v.sourceKey &&
       this.db.getFirstSync<{ id: string }>(

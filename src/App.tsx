@@ -31,6 +31,7 @@ import {
 } from "./ui/Screens";
 import type { Screen } from "./ui/Screens";
 import { WalletForm, TransactionForm, CategoryForm } from "./ui/Forms";
+import { parseNotification } from "./domain/capture";
 
 const nav = [
   {
@@ -101,10 +102,15 @@ function Shell() {
         );
         return;
       }
+      if (!parseNotification(text)) return;
+      const source = parsed.queryParams?.source;
       const capture = {
         id: uid(),
         text,
-        source: "shortcut",
+        source:
+          typeof source === "string" && source.length <= 200
+            ? source
+            : "shortcut",
         receivedAt: new Date().toISOString(),
       };
       repository.db.runSync(
